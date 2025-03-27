@@ -1,16 +1,28 @@
 package site.hnfy258;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class HuashenApplicationContext {
     private Map<String , BeanDefinition> beanDefinitionMap = new HashMap<>();
     private Map<String , Object> singletonObjects = new HashMap<>(); //单例池
+    private List<BeanPostProcessor> beanPostProcessorList = new ArrayList<>();
         public HuashenApplicationContext(Class configClass) {
             //扫描Bean
             scan(configClass);
+            for (Map.Entry<String, BeanDefinition> entry : beanDefinitionMap.entrySet()) {
+                String beanName = entry.getKey();
+                BeanDefinition beanDefinition = entry.getValue();
+                if (BeanPostProcessor.class.isAssignableFrom(beanDefinition.getType())) {
+                    beanPostProcessorList.add((BeanPostProcessor)createBean(beanName, beanDefinition));
+                }
+            }
+
 
             //非懒加载的单例Bean
             for(Map.Entry<String, BeanDefinition> beanDefinitionEntry : beanDefinitionMap.entrySet()){
@@ -26,6 +38,7 @@ public class HuashenApplicationContext {
 
     private void scan(Class configClass) {
         if (configClass.isAnnotationPresent(ComponentScan.class)) {
+            System.out.println(configClass.getName());
             ComponentScan componentScan = (ComponentScan) configClass.getAnnotation(ComponentScan.class);
             String packagePath = componentScan.value();
             String path = packagePath.replace(".", "/");
@@ -74,7 +87,44 @@ public class HuashenApplicationContext {
     public Object createBean(String beanName,BeanDefinition beanDefinition){
            Class type = beanDefinition.getType();
         try {
+            //实例化前
+            //实例化(推断构造方法)
             Object instance = type.newInstance();
+            //实例化后
+
+
+            //依赖注入 填充Bean
+            for(Field field : type.getDeclaredFields()){
+                if(field.isAnnotationPresent(Autowired.class)){
+
+                    String name = field.getName();
+                    field.setAccessible(true);
+                    field.set(instance,getBean(name));
+                }
+            }
+
+
+            for(BeanPostProcessor beanPostProcessor :beanPostProcessorList){
+                instance = beanPostProcessor.postProcessBeforeInitialization(instance,beanName);
+            }
+
+
+            //初始化 InitializingBean
+            if(instance instanceof InitializingBean){
+                try{
+                    ((InitializingBean) instance).afterPropertiesSet();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+
+
+            //初始化后 AOP BeanPostProcessor
+            for(BeanPostProcessor beanPostProcessor :beanPostProcessorList){
+                instance = beanPostProcessor.postProcessAfterInitialization(instance,beanName);
+            }
+
+
             return instance;
         } catch (InstantiationException e) {
             throw new RuntimeException(e);
