@@ -8,7 +8,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import site.hnfy258.bean.config.BeanDefinition;
-import site.hnfy258.bean.config.InstantiationStrategy.DefaultListableBeanFactory;
+import site.hnfy258.bean.factory.DefaultListableBeanFactory;
 import site.hnfy258.bean.core.io.DefaultResourceLoader;
 import site.hnfy258.bean.core.io.Resource;
 import site.hnfy258.bean.core.io.ResourceLoader;

@@ -1,25 +1,49 @@
-package site.hnfy258.bean.config.InstantiationStrategy;
+package site.hnfy258.bean.factory;
 
 import lombok.Getter;
 import lombok.Setter;
 import site.hnfy258.annotation.Autowired;
 import site.hnfy258.bean.config.*;
-import site.hnfy258.bean.factory.AbstractAutowireCapableBeanFactory;
+import site.hnfy258.bean.config.registry.BeanDefinitionRegistry;
+import site.hnfy258.bean.config.InstantiationStrategy.*;
+import site.hnfy258.bean.config.registry.DefaultBeanDefinitionRegistry;
+import site.hnfy258.bean.config.registry.DefaultSingletonBeanRegistry;
+import site.hnfy258.bean.config.registry.SingletonBeanRegistry;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
+
 @Getter
 @Setter
-public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFactory {
-    private Map<String, BeanDefinition> beanDefinitionMap = new HashMap<>();
-    private Map<String, Object> singletonObjects = new HashMap<>();
+public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFactory  {
+    private final BeanDefinitionRegistry beanDefinitionRegistry;
+    private final SingletonBeanRegistry singletonBeanRegistry;
     private InstantiationStrategy instantiationStrategy = new SmartInstantiationStrategy();
 
-    public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
-        beanDefinitionMap.put(beanName, beanDefinition);
+    public DefaultListableBeanFactory() {
+        beanDefinitionRegistry = new DefaultBeanDefinitionRegistry();
+        singletonBeanRegistry = new DefaultSingletonBeanRegistry();
     }
+
+    public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
+        beanDefinitionRegistry.registerBeanDefinition(beanName, beanDefinition);
+    }
+
+    public BeanDefinition getBeanDefinition(String beanName) {
+        return beanDefinitionRegistry.getBeanDefinition(beanName);
+    }
+
+    public boolean containsBeanDefinition(String beanName) {
+        return beanDefinitionRegistry.containsBeanDefinition(beanName);
+    }
+
+    public String[] getBeanDefinitionNames() {
+        return beanDefinitionRegistry.getBeanDefinitionNames();
+    }
+
+
 
     public void useJdkInstantiationStrategy() {
         setInstantiationStrategy(new JdkInstantiationStrategy());
@@ -33,6 +57,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         setInstantiationStrategy(new SmartInstantiationStrategy());
     }
 
+    @Override
     protected Object createBeanInstance(BeanDefinition beanDefinition, String beanName, Object[] args) {
         Constructor<?> constructorToUse = null;
         Class<?> beanClass = beanDefinition.getType();
@@ -93,22 +118,18 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         }
     }
 
+    @Override
     public Object getBean(String name) {
-        BeanDefinition beanDefinition = beanDefinitionMap.get(name);
-        if (beanDefinition == null) {
-            throw new RuntimeException("No bean named '" + name + "' is defined");
-        }
-
+        BeanDefinition beanDefinition = getBeanDefinition(name);
         if (beanDefinition.getScope().equals("singleton")) {
-            Object singletonObject = singletonObjects.get(name);
+            Object singletonObject = singletonBeanRegistry.getSingleton(name);
             if (singletonObject == null) {
                 singletonObject = createBean(name, beanDefinition);
-                singletonObjects.put(name, singletonObject);
+                singletonBeanRegistry.registerSingleton(name, singletonObject);
             }
             return singletonObject;
         }
 
         return createBean(name, beanDefinition);
     }
-
 }
