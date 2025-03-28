@@ -23,10 +23,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         Object bean = null;
         try {
             Class<?> beanClass = beanDefinition.getType();
-
+            //查找合适的构造函数
             Constructor<?> constructor = constructorResolver.resolveConstructor(beanDefinition);
 
             if (constructor != null) {
+                //填入默认值，以完成默认构造
                 Object[] args = argumentResolver.resolveConstructorArguments(constructor, beanDefinition);
                 bean = createBeanInstance(beanDefinition, beanName, args);
             } else {
