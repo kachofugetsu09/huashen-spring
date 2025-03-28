@@ -5,6 +5,8 @@ import lombok.Setter;
 import site.hnfy258.bean.config.*;
 import site.hnfy258.bean.config.InstantiationStrategy.*;
 
+import java.lang.reflect.Constructor;
+
 @Setter
 @Getter
 public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory {
@@ -20,35 +22,22 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     public Object createBean(String beanName, BeanDefinition beanDefinition) {
         Object bean = null;
         try {
-            // 首先尝试获取类的构造函数
             Class<?> beanClass = beanDefinition.getType();
-            if (beanClass.getConstructors().length > 0) {
-                // 使用第一个可用的构造函数
-                java.lang.reflect.Constructor<?> constructor = beanClass.getConstructors()[0];
-                // 为构造函数准备参数
-                Object[] args = new Object[constructor.getParameterCount()];
-                // 为构造函数参数提供默认值（实际应用中应该从容器中查找依赖）
-                for (int i = 0; i < args.length; i++) {
-                    Class<?> paramType = constructor.getParameterTypes()[i];
-                    // 设置一些基本默认值
-                    if (paramType == String.class) {
-                        args[i] = "";
-                    } else if (paramType.isPrimitive()) {
-                        args[i] = 0;  // 基本类型默认值
-                    } else {
-                        args[i] = null;
-                    }
-                }
+
+            Constructor<?> constructor = constructorResolver.resolveConstructor(beanDefinition);
+
+            if (constructor != null) {
+                Object[] args = argumentResolver.resolveConstructorArguments(constructor, beanDefinition);
                 bean = createBeanInstance(beanDefinition, beanName, args);
             } else {
                 bean = createBeanInstance(beanDefinition);
             }
-        } catch (Exception e) {
-            bean = createBeanInstance(beanDefinition);
-        }
 
-        applyPropertyValues(beanName, bean, beanDefinition);
-        initializeBean(beanName, bean, beanDefinition);
+            applyPropertyValues(beanName, bean, beanDefinition);
+            initializeBean(beanName, bean, beanDefinition);
+        } catch (Exception e) {
+            throw new RuntimeException("Error creating bean with name '" + beanName + "'", e);
+        }
         return bean;
     }
 

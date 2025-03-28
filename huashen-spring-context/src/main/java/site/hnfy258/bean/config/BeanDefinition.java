@@ -6,6 +6,8 @@ import lombok.Setter;
 @Setter
 public class BeanDefinition {
 
+
+
         private Class type;
 
         private String scope;

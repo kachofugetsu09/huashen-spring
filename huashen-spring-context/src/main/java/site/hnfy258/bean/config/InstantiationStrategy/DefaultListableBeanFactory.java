@@ -33,18 +33,48 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         setInstantiationStrategy(new SmartInstantiationStrategy());
     }
 
-    @Override
     protected Object createBeanInstance(BeanDefinition beanDefinition, String beanName, Object[] args) {
         Constructor<?> constructorToUse = null;
         Class<?> beanClass = beanDefinition.getType();
         Constructor<?>[] ctors = beanClass.getDeclaredConstructors();
-        for (Constructor<?> ctor : ctors) {
-            if (args != null && ctor.getParameterTypes().length == args.length) {
-                constructorToUse = ctor;
-                break;
+
+        constructorToUse = getConstructorToUse(beanName, args, ctors, constructorToUse);
+
+        return getInstantiationStrategy().instantiate(beanDefinition, beanName, constructorToUse, args);
+    }
+
+    private static Constructor<?> getConstructorToUse(String beanName, Object[] args, Constructor<?>[] ctors, Constructor<?> constructorToUse) {
+        if (args != null) {
+            for (Constructor<?> ctor : ctors) {
+                if (ctor.getParameterTypes().length == args.length) {
+                    boolean match = true;
+                    for (int i = 0; i < args.length; i++) {
+                        if (args[i] != null && !ctor.getParameterTypes()[i].isInstance(args[i])) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) {
+                        constructorToUse = ctor;
+                        break;
+                    }
+                }
             }
         }
-        return getInstantiationStrategy().instantiate(beanDefinition, beanName, constructorToUse, args);
+
+        if (constructorToUse == null) {
+            for (Constructor<?> ctor : ctors) {
+                if (ctor.getParameterTypes().length == 0) {
+                    constructorToUse = ctor;
+                    break;
+                }
+            }
+        }
+
+        if (constructorToUse == null) {
+            throw new RuntimeException("No suitable constructor found for bean '" + beanName + "'");
+        }
+        return constructorToUse;
     }
 
     @Override
