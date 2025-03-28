@@ -1,6 +1,4 @@
-package site.hnfy258;
-
-import java.lang.reflect.Method;
+package site.hnfy258.bean;
 
 public interface BeanPostProcessor {
 

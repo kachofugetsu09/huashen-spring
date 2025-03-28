@@ -1,4 +1,4 @@
-package site.hnfy258;
+package site.hnfy258.annotation;
 
 import java.lang.annotation.*;
 
