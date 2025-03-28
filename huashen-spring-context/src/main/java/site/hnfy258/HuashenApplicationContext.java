@@ -3,15 +3,19 @@ package site.hnfy258;
 import site.hnfy258.annotation.Component;
 import site.hnfy258.annotation.ComponentScan;
 import site.hnfy258.annotation.Scope;
+import site.hnfy258.bean.ApplicationContext;
 import site.hnfy258.bean.config.BeanDefinition;
 import site.hnfy258.bean.config.BeanPostProcessor;
 import site.hnfy258.bean.factory.DefaultListableBeanFactory;
 import site.hnfy258.bean.config.Reader.XmlBeanDefinitionReader;
+import site.hnfy258.bean.factory.aware.ApplicationContextAware;
+import site.hnfy258.exception.BeansException;
 
 import java.io.File;
 import java.net.URL;
+import java.util.Map;
 
-public class HuashenApplicationContext {
+public class HuashenApplicationContext implements ApplicationContext {
     private DefaultListableBeanFactory beanFactory;
     private XmlBeanDefinitionReader xmlBeanDefinitionReader;
 
@@ -107,7 +111,29 @@ public class HuashenApplicationContext {
         }
     }
 
-    public Object getBean(String name) {
-        return beanFactory.getBean(name);
+    @Override
+    public Object createBean(String beanName, BeanDefinition beanDefinition) {
+        return beanFactory.createBean(beanName, beanDefinition);
     }
+
+    @Override
+    public Object getBean(String name) throws Exception {
+        Object bean = beanFactory.getBean(name);
+        if (bean instanceof ApplicationContextAware) {
+            ((ApplicationContextAware) bean).setApplicationContext(this);
+        }
+        return bean;
+    }
+
+
+    @Override
+    public <T> Map<String, T> getBeansOfType(Class<T> type) throws BeansException {
+        return beanFactory.getBeansOfType(type);
+    }
+
+    @Override
+    public String[] getBeanDefinitionNames() {
+        return beanFactory.getBeanDefinitionNames();
+    }
+
 }

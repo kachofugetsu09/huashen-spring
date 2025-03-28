@@ -1,9 +1,14 @@
 package site.hnfy258.bean.factory;
 
+import cn.hutool.core.util.ClassUtil;
 import lombok.Getter;
 import lombok.Setter;
 import site.hnfy258.bean.config.*;
 import site.hnfy258.bean.config.InstantiationStrategy.*;
+import site.hnfy258.bean.factory.aware.BeanClassLoaderAware;
+import site.hnfy258.bean.factory.aware.BeanFactoryAware;
+import site.hnfy258.bean.factory.aware.BeanNameAware;
+import site.hnfy258.exception.BeansException;
 
 import java.lang.reflect.Constructor;
 
@@ -14,9 +19,12 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     private ConstructorResolver constructorResolver;
     private ArgumentResolver argumentResolver;
 
+    private ClassLoader classLoader;
+
     public AbstractAutowireCapableBeanFactory() {
         this.constructorResolver = new DefaultConstructorResolver();
         this.argumentResolver = new DefaultArgumentResolver();
+        classLoader = ClassUtil.getClassLoader();
     }
     @Override
     public Object createBean(String beanName, BeanDefinition beanDefinition) {
@@ -42,6 +50,23 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         return bean;
     }
 
+    protected void invokeAwareMethods(final String beanName, final Object bean) {
+        if (bean instanceof BeanNameAware) {
+            ((BeanNameAware) bean).setBeanName(beanName);
+        }
+        if (bean instanceof BeanClassLoaderAware) {
+            ((BeanClassLoaderAware) bean).setBeanClassLoader(getBeanClassLoader());
+        }
+        if (bean instanceof BeanFactoryAware) {
+            ((BeanFactoryAware) bean).setBeanFactory(this);
+        }
+    }
+
+    private ClassLoader getBeanClassLoader() {
+        return classLoader;
+    }
+
+
     private Object createBeanInstance(BeanDefinition beanDefinition) {
         return getInstantiationStrategy().instantiate(beanDefinition, beanDefinition.getClass().getName(), null, null);
     }
@@ -51,7 +76,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
     protected abstract void applyPropertyValues(String beanName, Object bean, BeanDefinition beanDefinition);
     
-    protected void initializeBean(String beanName, Object bean, BeanDefinition beanDefinition) {
+    protected void initializeBean(String beanName, Object bean, BeanDefinition beanDefinition) throws BeansException {
+        invokeAwareMethods(beanName, bean);
         applyBeanPostProcessorsBeforeInitialization(bean, beanName);
         invokeInitMethods(bean, beanName);
         applyBeanPostProcessorsAfterInitialization(bean, beanName);

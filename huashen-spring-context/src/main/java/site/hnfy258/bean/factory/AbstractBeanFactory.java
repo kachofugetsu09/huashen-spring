@@ -1,6 +1,7 @@
 package site.hnfy258.bean.factory;
 
 import site.hnfy258.bean.config.BeanPostProcessor;
+import site.hnfy258.exception.BeansException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,7 @@ public abstract class AbstractBeanFactory implements BeanFactory {
         this.beanPostProcessorList.add(beanPostProcessor);
     }
 
-    protected void applyBeanPostProcessorsBeforeInitialization(Object bean, String beanName) {
+    protected void applyBeanPostProcessorsBeforeInitialization(Object bean, String beanName) throws BeansException {
         for (BeanPostProcessor processor : beanPostProcessorList) {
             processor.postProcessBeforeInitialization(bean, beanName);
         }

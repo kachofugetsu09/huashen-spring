@@ -1,6 +1,9 @@
 package site.hnfy258.bean.factory;
 
+import cn.hutool.core.util.ClassUtil;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import site.hnfy258.annotation.Autowired;
 import site.hnfy258.bean.config.*;
@@ -9,6 +12,7 @@ import site.hnfy258.bean.config.InstantiationStrategy.*;
 import site.hnfy258.bean.config.registry.DefaultBeanDefinitionRegistry;
 import site.hnfy258.bean.config.registry.DefaultSingletonBeanRegistry;
 import site.hnfy258.bean.config.registry.SingletonBeanRegistry;
+import site.hnfy258.exception.BeansException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -17,10 +21,15 @@ import java.util.Map;
 
 @Getter
 @Setter
-public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFactory  {
+@AllArgsConstructor
+public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFactory implements ConfigurableListableBeanFactory {
     private final BeanDefinitionRegistry beanDefinitionRegistry;
     private final SingletonBeanRegistry singletonBeanRegistry;
     private InstantiationStrategy instantiationStrategy = new SmartInstantiationStrategy();
+
+    private ClassLoader beanClassLoader = ClassUtil.getClassLoader();
+
+
 
     public DefaultListableBeanFactory() {
         beanDefinitionRegistry = new DefaultBeanDefinitionRegistry();
@@ -37,6 +46,19 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
     public boolean containsBeanDefinition(String beanName) {
         return beanDefinitionRegistry.containsBeanDefinition(beanName);
+    }
+
+
+
+    public <T> Map<String, T> getBeansOfType(Class<T> type) throws BeansException {
+        Map<String, T> result = new HashMap<>();
+        for (String beanName : getBeanDefinitionNames()) {
+            BeanDefinition beanDefinition = getBeanDefinition(beanName);
+            if (type.isAssignableFrom(beanDefinition.getType())) {
+                result.put(beanName, (T) getBean(beanName));
+            }
+        }
+        return result;
     }
 
     public String[] getBeanDefinitionNames() {
@@ -132,4 +154,5 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
         return createBean(name, beanDefinition);
     }
+
 }
