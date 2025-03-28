@@ -1,10 +1,17 @@
 package site.hnfy258;
 
+import site.hnfy258.annotation.PostConstruct;
+
 public class TestBean {
     private String name;
     private int age;
 
     public TestBean() {
+    }
+
+    @PostConstruct
+    public void init(){
+        System.out.println("TestBean已加载");
     }
 
     public String getName() {
@@ -25,6 +32,7 @@ public class TestBean {
 
     @Override
     public String toString() {
+
         return "TestBean{" +
                 "name='" + name + '\'' +
                 ", age=" + age +
