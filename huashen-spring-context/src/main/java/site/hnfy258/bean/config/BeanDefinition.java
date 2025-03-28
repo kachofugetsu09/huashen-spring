@@ -1,4 +1,4 @@
-package site.hnfy258.bean;
+package site.hnfy258.bean.config;
 
 import lombok.Getter;
 import lombok.Setter;

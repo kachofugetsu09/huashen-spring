@@ -1,4 +1,4 @@
-package site.hnfy258.bean;
+package site.hnfy258.bean.config;
 
 public interface BeanPostProcessor {
 

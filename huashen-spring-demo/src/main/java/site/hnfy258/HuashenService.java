@@ -4,16 +4,19 @@ import site.hnfy258.annotation.Autowired;
 import site.hnfy258.annotation.Component;
 import site.hnfy258.annotation.PostConstruct;
 import site.hnfy258.annotation.Scope;
-import site.hnfy258.bean.InitializingBean;
+import site.hnfy258.bean.config.InitializingBean;
 
 @Component("huashenService")
 @Scope("prototype")
 public class HuashenService  implements InitializingBean {
     @Autowired
     UserService userService;
+    
+
     public void test(){
         System.out.println(userService);
     }
+
 
     @PostConstruct
     public void a(){
@@ -24,4 +27,5 @@ public class HuashenService  implements InitializingBean {
     public void afterPropertiesSet() {
         System.out.println("huashen2");
     }
+
 }

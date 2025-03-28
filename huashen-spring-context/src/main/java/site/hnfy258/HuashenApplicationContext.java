@@ -3,9 +3,9 @@ package site.hnfy258;
 import site.hnfy258.annotation.Component;
 import site.hnfy258.annotation.ComponentScan;
 import site.hnfy258.annotation.Scope;
-import site.hnfy258.bean.BeanDefinition;
-import site.hnfy258.bean.BeanPostProcessor;
-import site.hnfy258.bean.DefaultListableBeanFactory;
+import site.hnfy258.bean.config.BeanDefinition;
+import site.hnfy258.bean.config.BeanPostProcessor;
+import site.hnfy258.bean.config.InstantiationStrategy.DefaultListableBeanFactory;
 
 import java.io.File;
 import java.net.URL;
@@ -16,6 +16,7 @@ public class HuashenApplicationContext {
 
     public HuashenApplicationContext(Class<?> configClass) {
         this.beanFactory = new DefaultListableBeanFactory();
+        beanFactory.useSmartInstantiationStrategy();
         scan(configClass);
         registerBeanPostProcessors();
         finishBeanFactoryInitialization();
