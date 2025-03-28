@@ -6,6 +6,7 @@ import site.hnfy258.annotation.Scope;
 import site.hnfy258.bean.config.BeanDefinition;
 import site.hnfy258.bean.config.BeanPostProcessor;
 import site.hnfy258.bean.config.InstantiationStrategy.DefaultListableBeanFactory;
+import site.hnfy258.bean.config.Reader.XmlBeanDefinitionReader;
 
 import java.io.File;
 import java.net.URL;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 public class HuashenApplicationContext {
     private DefaultListableBeanFactory beanFactory;
+    private XmlBeanDefinitionReader xmlBeanDefinitionReader;
 
     public HuashenApplicationContext(Class<?> configClass) {
         this.beanFactory = new DefaultListableBeanFactory();
@@ -21,6 +23,17 @@ public class HuashenApplicationContext {
         registerBeanPostProcessors();
         finishBeanFactoryInitialization();
     }
+
+    public HuashenApplicationContext(String xmlPath) {
+        this.beanFactory = new DefaultListableBeanFactory();
+        beanFactory.useSmartInstantiationStrategy();
+        xmlBeanDefinitionReader = new XmlBeanDefinitionReader(beanFactory);
+        xmlBeanDefinitionReader.loadBeanDefinitions(xmlPath);
+        registerBeanPostProcessors();
+        finishBeanFactoryInitialization();
+    }
+
+
 
 
     private void scan(Class configClass) {
@@ -49,15 +62,7 @@ public class HuashenApplicationContext {
 
                             Class<?> clazz = classLoader.loadClass(className);
                             if (clazz.isAnnotationPresent(Component.class)) {
-                                BeanDefinition beanDefinition = new BeanDefinition();
-                                beanDefinition.setType(clazz);
-                                beanDefinition.setLazy(false);
-
-                                if (clazz.isAnnotationPresent(Scope.class)) {
-                                    beanDefinition.setScope(clazz.getAnnotation(Scope.class).value());
-                                } else {
-                                    beanDefinition.setScope("singleton");
-                                }
+                                BeanDefinition beanDefinition = getBeanDefinition(clazz);
 
                                 String beanName = clazz.getAnnotation(Component.class).value();
                                 beanFactory.registerBeanDefinition(beanName, beanDefinition);
@@ -69,6 +74,18 @@ public class HuashenApplicationContext {
                 throw new RuntimeException("扫描类时出错", e);
             }
         }
+    }
+
+    private static BeanDefinition getBeanDefinition(Class<?> clazz) {
+        BeanDefinition beanDefinition = new BeanDefinition(clazz);
+        beanDefinition.setLazy(false);
+
+        if (clazz.isAnnotationPresent(Scope.class)) {
+            beanDefinition.setScope(clazz.getAnnotation(Scope.class).value());
+        } else {
+            beanDefinition.setScope("singleton");
+        }
+        return beanDefinition;
     }
 
     private void registerBeanPostProcessors() {

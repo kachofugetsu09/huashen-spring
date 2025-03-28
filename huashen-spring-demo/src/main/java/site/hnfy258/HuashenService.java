@@ -11,10 +11,14 @@ import site.hnfy258.bean.config.InitializingBean;
 public class HuashenService  implements InitializingBean {
     @Autowired
     UserService userService;
-    
+
 
     public void test(){
         System.out.println(userService);
+    }
+
+    public void useUserService(){
+        System.out.println(userService.getName());
     }
 
 
