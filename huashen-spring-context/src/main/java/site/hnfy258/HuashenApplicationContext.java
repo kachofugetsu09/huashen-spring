@@ -6,6 +6,7 @@ import site.hnfy258.annotation.Scope;
 import site.hnfy258.bean.ApplicationContext;
 import site.hnfy258.bean.config.BeanDefinition;
 import site.hnfy258.bean.config.BeanPostProcessor;
+import site.hnfy258.bean.context.AbstractApplicationContext;
 import site.hnfy258.bean.factory.DefaultListableBeanFactory;
 import site.hnfy258.bean.config.Reader.XmlBeanDefinitionReader;
 import site.hnfy258.bean.factory.aware.ApplicationContextAware;
@@ -15,15 +16,16 @@ import java.io.File;
 import java.net.URL;
 import java.util.Map;
 
-public class HuashenApplicationContext implements ApplicationContext {
+public class HuashenApplicationContext extends AbstractApplicationContext {
     private DefaultListableBeanFactory beanFactory;
     private XmlBeanDefinitionReader xmlBeanDefinitionReader;
 
 
-    public HuashenApplicationContext(Class<?> configClass) {
+    public HuashenApplicationContext(Class<?> configClass) throws BeansException {
         this.beanFactory = new DefaultListableBeanFactory();
         beanFactory.useSmartInstantiationStrategy();
         scan(configClass);
+        refresh();
         registerBeanPostProcessors();
         finishBeanFactoryInitialization();
     }
@@ -135,5 +137,6 @@ public class HuashenApplicationContext implements ApplicationContext {
     public String[] getBeanDefinitionNames() {
         return beanFactory.getBeanDefinitionNames();
     }
+
 
 }

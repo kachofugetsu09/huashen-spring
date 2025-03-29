@@ -8,4 +8,6 @@ import site.hnfy258.annotation.Scope;
 @Scope("prototype")
 public class MyConfig {
 
+
+
 }
